@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: 22
+      - name: Test release metadata lookup
+        run: node --experimental-strip-types --test scripts/release.test.ts
       - id: matrix
         name: Read module registry
         run: |

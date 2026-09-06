@@ -40,8 +40,10 @@ be reused. Rebuild one module's API with `npm run build:api -- swift-stash`.
 Set `DOCS_SOURCES_ROOT` to the absolute parent directory of module checkouts when
 using another layout. CI checks out modules into `.build/sources/<module>`.
 Preparation fetches current stable releases only for guides using release tokens.
+If no GitHub Release exists, it uses the highest stable `X.Y.Z` or `vX.Y.Z` tag,
+links to that tag, and shows “Published via Git tag” without inventing a release date.
 `GITHUB_TOKEN` or `GH_TOKEN` can authenticate those reads; without a token, public
-GitHub API rate limits apply. Failed release lookups stop the build.
+GitHub API rate limits apply. Other API failures or a missing stable tag stop the build.
 
 ## Writing module guides
 
