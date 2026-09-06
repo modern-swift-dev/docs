@@ -70,12 +70,15 @@ jobs:
         env:
           MODULE: ${{ matrix.module }}
         run: node --experimental-strip-types scripts/build-api.ts "$MODULE"
+      - name: Package module documentation
+        env:
+          MODULE: ${{ matrix.module }}
+          COPYFILE_DISABLE: "1"
+        run: tar -cf ".build/module-$MODULE.tar" -C .build "api/$MODULE" "content/$MODULE"
       - uses: actions/upload-artifact@v7
         with:
           name: module-${{ matrix.module }}
-          path: |
-            .build/api/${{ matrix.module }}
-            .build/content/${{ matrix.module }}
+          path: .build/module-${{ matrix.module }}.tar
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 1
@@ -92,6 +95,12 @@ jobs:
           pattern: module-*
           path: .build
           merge-multiple: true
+      - name: Extract module documentation
+        run: |
+          for archive in .build/module-*.tar; do
+            tar -xf "$archive" -C .build
+            rm "$archive"
+          done
       - uses: actions/setup-node@v6
         with:
           node-version: 22
