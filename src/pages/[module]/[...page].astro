@@ -1,0 +1,45 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { modules, apiURL } from "../../data/modules";
+
+export async function getStaticPaths() {
+  return (await getCollection("guides")).map((entry) => {
+    const [module, ...segments] = entry.id.split("/");
+    if (segments.at(-1) === "index") segments.pop();
+    return { params: { module, page: segments.join("/") || undefined }, props: { entry } };
+  });
+}
+
+interface Props { entry: CollectionEntry<"guides">; }
+const { entry } = Astro.props;
+const module = modules.find((module) => module.id === Astro.params.module);
+if (!module) throw new Error(`Unknown module: ${Astro.params.module}`);
+const { Content, headings } = await render(entry);
+const routeOrder = ["index", "documentation/index", "documentation/getting-started/index", "examples/index"];
+const rank = (guide: CollectionEntry<"guides">) => {
+  const index = routeOrder.indexOf(guide.id.slice(module.id.length + 1));
+  return index < 0 ? routeOrder.length : index;
+};
+const guides = (await getCollection("guides"))
+  .filter((guide) => guide.id.startsWith(`${module.id}/`))
+  .sort((left, right) => rank(left) - rank(right) || left.id.localeCompare(right.id));
+const guideURL = (guide: CollectionEntry<"guides">) => `/docs/${guide.id.replace(/\/index$/, "")}/`;
+---
+<BaseLayout title={entry.data.title} description={entry.data.description} module={module}>
+  <div class="page-shell docs-grid">
+    <aside class="sidebar" aria-label={`${module.name} documentation`}>
+      <a class="module-name" href={`/docs/${module.id}/`}>{module.name}</a>
+      <p class="sidebar-label">Guides</p>
+      <nav>{guides.map((guide) => <a href={guideURL(guide)} aria-current={entry.id === guide.id ? "page" : undefined}>{guide.id === `${module.id}/index` ? "Overview" : guide.data.title.replace(new RegExp(`\\s*[|·]\\s*${module.name}$`), "")}</a>)}</nav>
+      <p class="sidebar-label">API reference</p>
+      <nav>{module.api.map((api) => <a href={apiURL(module, api)}>{api.target}<span aria-hidden="true">↗</span></a>)}</nav>
+      <a class="source-link" href={`https://github.com/modern-swift-dev/${module.id}/tree/${module.branch}/Documentation/Site`}>View guide sources ↗</a>
+    </aside>
+    <article class="guide">
+      <div class="breadcrumb"><a href="/docs/">Documentation</a><span aria-hidden="true">/</span><a href={`/docs/${module.id}/`}>{module.name}</a></div>
+      <div class="prose"><Content /></div>
+    </article>
+    {headings.some((heading) => heading.depth === 2) && <aside class="on-this-page" aria-label="On this page"><p class="sidebar-label">On this page</p><nav>{headings.filter((heading) => heading.depth === 2).map((heading) => <a href={`#${heading.slug}`}>{heading.text}</a>)}</nav></aside>}
+  </div>
+</BaseLayout>

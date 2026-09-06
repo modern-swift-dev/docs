@@ -17,63 +17,65 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: macos-26
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - module: calder-swiftui
-            ref: main
-            build: make site-setup && npm --prefix Website run check && make site-build && make site-check
-          - module: lockbox-swift
-            ref: main
-            build: make site-validate
-          - module: mocksmith-swift
-            ref: main
-            build: make site-build
-          - module: pathways-swift
-            ref: main
-            build: make site-setup && make site-build
-          - module: roundtrip-swift
-            ref: main
-            build: make site-setup && make site && make internal-link
-          - module: skein-swift
-            ref: main
-            build: make site-setup && npm --prefix Website run check && make site-build && make site-check
-          - module: swift-markdown-ui
-            ref: develop
-            build: make site-validate
-          - module: swift-snapshot-testing
-            ref: main
-            build: make website-install && make site-build && make site-check
-          - module: swift-stash
-            ref: main
-            build: make site-setup && make site-build && make site-validate
-          - module: taskloom-swift
-            ref: main
-            build: make site-setup && npm --prefix Website run check && make site-build && make site-check
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+  modules:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v6
         with:
-          repository: modern-swift-dev/${{ matrix.module }}
-          ref: ${{ matrix.ref }}
           persist-credentials: false
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: Website/package-lock.json
-      - name: Build and validate module site
-        run: ${{ matrix.build }}
-      - name: Require generated site
-        run: test -f .build/site/index.html
+      - id: matrix
+        name: Read module registry
+        run: |
+          node --experimental-strip-types --input-type=module <<'JS'
+          import { appendFileSync } from 'node:fs';
+          import { modules } from './src/data/modules.ts';
+          const include = modules.map(({ id, branch }) => ({ module: id, ref: branch }));
+          appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify({ include })}\n`);
+          JS
+
+  build:
+    needs: modules
+    runs-on: macos-26
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.modules.outputs.matrix) }}
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.6.app/Contents/Developer
+    steps:
+      - name: Check out the documentation app
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Check out module sources
+        uses: actions/checkout@v6
+        with:
+          repository: modern-swift-dev/${{ matrix.module }}
+          ref: ${{ matrix.ref }}
+          path: .build/sources/${{ matrix.module }}
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Prepare module Markdown and source examples
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MODULE: ${{ matrix.module }}
+        run: node --experimental-strip-types scripts/prepare-content.ts "$MODULE"
+      - name: Generate Apple DocC API references
+        env:
+          MODULE: ${{ matrix.module }}
+        run: node --experimental-strip-types scripts/build-api.ts "$MODULE"
       - uses: actions/upload-artifact@v7
         with:
-          name: site-${{ matrix.module }}
-          path: .build/site
+          name: module-${{ matrix.module }}
+          path: |
+            .build/api/${{ matrix.module }}
+            .build/content/${{ matrix.module }}
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 1
@@ -87,10 +89,20 @@ jobs:
           persist-credentials: false
       - uses: actions/download-artifact@v8
         with:
-          pattern: site-*
-          path: .build/modules
-      - name: Assemble documentation site
-        run: python3 scripts/assemble.py
+          pattern: module-*
+          path: .build
+          merge-multiple: true
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - name: Build the shared Astro website
+        run: |
+          npm ci
+          npm run check
+          npm run build:guides
+          npm run assemble
+          npm run check:links
       - uses: actions/upload-pages-artifact@v5
         with:
           path: .build/site

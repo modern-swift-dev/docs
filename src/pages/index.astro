@@ -1,0 +1,25 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { modules } from "../data/modules";
+---
+<BaseLayout title="Documentation" description="Guides, examples, and API references for the Modern Swift libraries.">
+  <section class="hero">
+    <div class="page-shell hero-content">
+      <p class="eyebrow">Modern Swift documentation</p>
+      <h1>Small libraries.<br /><span class="gradient-text">A shared place to learn.</span></h1>
+      <p class="hero-copy">Build with focused Swift libraries. Find the guide, explore a working example, and go deeper with the API reference.</p>
+      <a class="button-primary" href="#modules">Explore the modules <span aria-hidden="true">↓</span></a>
+    </div>
+  </section>
+  <section id="modules" class="page-shell modules-section" aria-labelledby="modules-heading">
+    <div class="section-heading"><div><p class="eyebrow">The collection</p><h2 id="modules-heading">Choose your starting point.</h2></div><p>{modules.length} libraries · Guides and API references</p></div>
+    <div class="module-grid">
+      {modules.map((module) => <a class="surface module-card" href={`/docs/${module.id}/`}>
+        <p class="category">{module.category}</p>
+        <h3>{module.name}</h3>
+        <p class="module-description">{module.description}</p>
+        <span class="card-link">Read the documentation <span aria-hidden="true">→</span></span>
+      </a>)}
+    </div>
+  </section>
+</BaseLayout>

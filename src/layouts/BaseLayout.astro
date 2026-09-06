@@ -1,0 +1,34 @@
+---
+import "../styles/global.css";
+import { modules, type DocumentationModule } from "../data/modules";
+
+interface Props { title: string; description: string; module?: DocumentationModule; }
+const { title, description, module } = Astro.props;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/docs/favicon.svg" />
+    <title>{title} · Modern Swift</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <nav class="page-shell navigation" aria-label="Main navigation">
+        <a class="brand" href="/docs/"><span class="brand-mark" aria-hidden="true">M</span>Modern Swift<span class="brand-caption">Documentation</span></a>
+        <div class="nav-links">
+          <a href="/docs/#modules">All modules</a>
+          {module && <a href={`/docs/${module.id}/documentation/`}>Documentation</a>}
+          <a href={`https://github.com/modern-swift-dev/${module?.id ?? "docs"}`}>GitHub <span aria-hidden="true">↗</span></a>
+        </div>
+      </nav>
+    </header>
+    <main id="main"><slot /></main>
+    <footer class="site-footer">
+      <div class="page-shell footer-content"><p>Modern Swift · Libraries for thoughtful application code.</p><a href="/docs/">Explore all {modules.length} modules →</a></div>
+    </footer>
+  </body>
+</html>
