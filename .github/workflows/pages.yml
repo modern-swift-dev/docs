@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   modules:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
@@ -42,7 +42,7 @@ jobs:
 
   build:
     needs: modules
-    runs-on: macos-26
+    runs-on: depot-macos-26
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.modules.outputs.matrix) }}
@@ -87,7 +87,7 @@ jobs:
 
   assemble:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
@@ -123,7 +123,7 @@ jobs:
   deploy:
     if: github.event_name != 'pull_request'
     needs: assemble
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-latest
     permissions:
       pages: write
       id-token: write
