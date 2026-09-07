@@ -15,6 +15,10 @@ export interface DocumentationModule {
 }
 
 export const modules: DocumentationModule[] = [
+  { id: "cabinet-swift", name: "Cabinet", description: "Typed files and directories, throwing I/O, Codable storage, and optional ZIP archives.", category: "Storage", branch: "main", mode: "separate", api: [
+    { target: "Cabinet", path: "api/cabinet", flags: [] },
+    { target: "CabinetZip", path: "api/cabinet-zip", flags: [] },
+  ] },
   { id: "calder-swiftui", name: "Calder", description: "Focused Swift utilities and UI components for Apple applications.", category: "Application foundations", branch: "main", mode: "separate", api: [
     { target: "CalderStdLib", path: "api/calder-stdlib", flags: ["--disable-indexing", "--experimental-skip-synthesized-symbols"] },
     { target: "CalderSwiftUI", path: "api/calder-swiftui", flags: ["--disable-indexing", "--experimental-skip-synthesized-symbols"] },
