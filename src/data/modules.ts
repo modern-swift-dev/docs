@@ -55,6 +55,8 @@ export const modules: DocumentationModule[] = [
   { id: "skein-swift", name: "Skein", description: "Compose dependency graphs with explicit lifetimes and isolation.", category: "Application foundations", branch: "main", mode: "separate", api: [
     { target: "Skein", path: "api/skein", flags: [] },
     { target: "SkeinSwiftUI", path: "api/skein-swiftui", flags: [] },
+  ] },
+  { id: "skein-vapor", name: "SkeinVapor", description: "Integrate Skein with Vapor applications, request scopes, and asynchronous resource cleanup.", category: "Application foundations", branch: "main", mode: "separate", api: [
     { target: "SkeinVapor", path: "api/skein-vapor", flags: [] },
   ] },
   { id: "swift-markdown-ui", name: "MarkdownUI", description: "Render and edit Markdown in SwiftUI with composable styling.", category: "User interfaces", branch: "develop", mode: "merged", api: [
